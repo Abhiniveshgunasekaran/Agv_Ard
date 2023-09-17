@@ -1,0 +1,81 @@
+#include <AFMotor.h> // Adafruit Motor Shield library
+#include <Servo.h>   // Servo library
+
+// Motor Shield Initialization
+AF_DCMotor motor1(1); // Initialize motor1 on M1 port
+AF_DCMotor motor2(2); // Initialize motor2 on M2 port
+AF_DCMotor motor3(3); // Initialize motor3 on M3 port
+AF_DCMotor motor4(4); // Initialize motor4 on M4 port
+
+// Servo motor Initialization
+Servo steeringServo;
+
+// FlySky Receiver Variables
+int throttle;  // Throttle channel (CH3)
+int steering;  // Steering channel (CH2)
+
+void setup() {
+  // Initialize Serial communication
+  Serial.begin(9600);
+
+  // Attach the servo to pin 9
+  steeringServo.attach(9);
+
+  // Set initial motor speed
+  motor1.setSpeed(255); // Max speed
+  motor2.setSpeed(255); // Max speed
+  motor3.setSpeed(255); // Max speed
+  motor4.setSpeed(255); // Max speed
+}
+
+void loop() {
+  // Read FlySky receiver values
+  throttle = pulseIn(8, HIGH, 20000);  // Read CH3 input (Throttle)
+  steering = pulseIn(7, HIGH, 20000);  // Read CH2 input (Steering)
+
+  // Map the received values to control the motors
+  int motorSpeed = map(throttle, 1000, 2000, -255, 255); // Map throttle to motor speed
+
+  // Set motor speeds based on joystick input
+  motor1.setSpeed(abs(motorSpeed));
+  motor2.setSpeed(abs(motorSpeed));
+  motor3.setSpeed(abs(motorSpeed));
+  motor4.setSpeed(abs(motorSpeed));
+
+  if (motorSpeed > 0) {
+    // Forward
+    motor1.run(FORWARD);
+    motor2.run(FORWARD);
+    motor3.run(FORWARD);
+    motor4.run(FORWARD);
+  } else if (motorSpeed < 0) {
+    // Backward
+    motor1.run(BACKWARD);
+    motor2.run(BACKWARD);
+    motor3.run(BACKWARD);
+    motor4.run(BACKWARD);
+  } else {
+    // Stop
+    motor1.run(RELEASE);
+    motor2.run(RELEASE);
+    motor3.run(RELEASE);
+    motor4.run(RELEASE);
+  }
+
+  // Map the steering input to servo position
+  int servoAngle = map(steering, 1000, 2000, 0, 180);
+
+  // Set the servo position for steering control
+  steeringServo.write(servoAngle);
+
+  // Print debug information
+  Serial.print("Throttle: ");
+  Serial.print(throttle);
+  Serial.print("   Steering: ");
+  Serial.print(steering);
+  Serial.print("   Motor Speed: ");
+  Serial.println(motorSpeed);
+
+  // Add delay if needed
+  delay(20); // Adjust as necessary
+}
